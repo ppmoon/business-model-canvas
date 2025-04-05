@@ -40,8 +40,6 @@ export default {
       // 动态计算画布尺寸（根据模块布局自动调整）
       width: 0,
       height: 0,
-      // 标题区域的高度
-      titleHeight: 80,
       // 弹窗相关数据
       showDialog: false,
       selectedBox: null,
@@ -68,9 +66,9 @@ export default {
           title: '重要伙伴',
           subtitle: 'Key Partnerships', 
           x: 0,
-          y: 80,
+          y: 0,
           width: window.innerWidth / 5, // 浏览器宽度的1/5并留出间距
-          height: 320,
+          height: window.innerHeight,
           color: '#fff3d4'
         },
         {
@@ -78,7 +76,7 @@ export default {
           title: '关键业务',
           subtitle: 'Key Activities',
           x: window.innerWidth / 5, // 前一个模块x + 宽度 + 间距
-          y: 80,
+          y: 0,
           width: window.innerWidth / 5,
           height: 160,
           color: '#ebf2ff'
@@ -88,7 +86,7 @@ export default {
           title: '价值主张',
           subtitle: 'Value Propositions',
           x: (window.innerWidth / 5) * 2, // 依次累加
-          y: 80,
+          y: 0,
           width: window.innerWidth / 5,
           height: 320,
           color: '#f6eefe'
@@ -98,7 +96,7 @@ export default {
           title: '客户关系',
           subtitle: 'Customer Relationships',
           x: (window.innerWidth / 5) * 3,
-          y: 80,
+          y: 0,
           width: window.innerWidth / 5,
           height: 160,
           color: '#ebf2ff'
@@ -108,7 +106,7 @@ export default {
           title: '客户细分',
           subtitle: 'Customer Segments',
           x: (window.innerWidth / 5) * 4,
-          y: 80,
+          y: 0,
           width: window.innerWidth / 5,
           height: 320,
           color: '#f6eefe'
@@ -241,11 +239,9 @@ export default {
 
       // 2. 绘制便利贴
       this.notes.forEach(note => {
-        const box = this.boxes.find(b => b.id === note.boxId);
-        if (!box) return;
 
         const g = mainGroup.append('g')
-          .attr('transform', `translate(${box.x + note.x}, ${box.y + note.y})`)
+          .attr('transform', `translate(${note.x}, ${note.y})`)
           .classed('note', true) // 便于识别便利贴元素
           .call(d3.drag()
             .on('start', (event) => {
@@ -261,35 +257,10 @@ export default {
             })
             .on('drag', (event) => {
               if (!this.dragging) return;
-              
-              // 获取当前的缩放比例
-              const scale = this.currentZoom;
-              
-              // 计算全局坐标时考虑缩放因子
-              const globalX = event.x / scale;
-              const globalY = event.y / scale;
-              
-              // 查找当前所在的模块
-              const currentBox = this.boxes.find(b => 
-                globalX >= b.x && 
-                globalX <= b.x + b.width &&
-                globalY >= b.y && 
-                globalY <= b.y + b.height
-              );
+              note.x = event.x
+              note.y = event.y
+              g.attr('transform', `translate(${event.x}, ${event.y})`);
 
-              if (currentBox) {
-                // 转换坐标到新模块的局部坐标系
-                const localX = globalX - currentBox.x;
-                const localY = globalY - currentBox.y;
-                
-                // 限制在新模块范围内
-                note.x = Math.max(0, Math.min(localX, currentBox.width - 120));
-                note.y = Math.max(0, Math.min(localY, currentBox.height - 80));
-                
-                // 更新模块关联和位置
-                note.boxId = currentBox.id;
-                g.attr('transform', `translate(${currentBox.x + note.x}, ${currentBox.y + note.y})`);
-              }
             })
             .on('end', () => {
               // 重新启用画布的缩放功能
@@ -418,21 +389,96 @@ export default {
       this.currentZoom = 1;
     },
 
+    addNote(note) {
+      const svg = d3.select(this.$refs.canvas).select('svg');
+      const mainGroup = svg.select('.main-group');
+      
+      const g = mainGroup.append('g')
+        .attr('transform', `translate(${note.x}, ${note.y})`)
+        .classed('note', true)
+        .call(d3.drag()
+          .on('start', (event) => {
+            svg.on('.zoom', null);
+            event.sourceEvent.stopPropagation();
+            this.dragging = {
+              target: note,
+              offsetX: event.x - note.x,
+              offsetY: event.y - note.y
+            };
+          })
+          .on('drag', (event) => {
+            if (!this.dragging) return;
+            note.x = event.x
+            note.y = event.y
+            g.attr('transform', `translate(${event.x}, ${event.y})`);
+          })
+          .on('end', () => {
+            svg.call(this.zoom);
+            this.dragging = null;
+            this.notes = [...this.notes];
+          }));
+
+      // 便利贴背景
+      g.append('rect')
+        .attr('width', 120)
+        .attr('height', 80)
+        .attr('fill', '#FFF9C4')
+        .attr('rx', 5)
+        .attr('stroke', '#FFD700');
+
+      // 便利贴内容
+      g.append('foreignObject')
+        .attr('width', 110)
+        .attr('height', 70)
+        .attr('x', 5)
+        .attr('y', 5)
+        .append('xhtml:div')
+        .style('font-size', '12px')
+        .style('padding', '5px')
+        .style('word-break', 'break-all')
+        .html(note.content);
+
+      // 删除按钮
+      g.append('circle')
+        .attr('cx', 110)
+        .attr('cy', 5)
+        .attr('r', 8)
+        .attr('fill', '#ff4d4f')
+        .style('cursor', 'pointer')
+        .style('pointer-events', 'all')
+        .on('click', function(event) {
+          event.stopPropagation();
+          this.selectedNote = note;
+          this.dialogType = 'delete';
+          this.showDialog = true;
+        }.bind(this));
+        
+      g.append('text')
+        .attr('x', 110)
+        .attr('y', 5)
+        .attr('text-anchor', 'middle')
+        .attr('dominant-baseline', 'central')
+        .attr('fill', 'white')
+        .attr('font-size', '12px')
+        .style('cursor', 'pointer')
+        .style('pointer-events', 'none')
+        .text('×');
+    },
+
     handleConfirm() {
       if (this.dialogType === 'add') {
         if (this.newNoteContent.trim()) {
           const note = {
-            boxId: this.selectedBox.id,
             content: this.newNoteContent,
-            x: Math.random() * (this.selectedBox.width - 120),
-            y: Math.random() * (this.selectedBox.height - 80)
+            x: this.selectedBox.x + Math.random() * (this.selectedBox.width - 120),
+            y: this.selectedBox.y + Math.random() * (this.selectedBox.height - 80)
           };
           this.notes = [...this.notes, note];
-          this.drawCanvas();
+          this.addNote(note);
         }
       } else if (this.dialogType === 'delete' && this.selectedNote) {
+        d3.select(this.$refs.canvas).select(`g[transform="translate(${this.selectedNote.x}, ${this.selectedNote.y})"]`).remove();
         this.notes = this.notes.filter(n => n !== this.selectedNote);
-        this.drawCanvas();
       }
       
       this.showDialog = false;
@@ -454,7 +500,7 @@ export default {
   overflow: hidden;
   width: 100%;
   height: 100%;
-  margin: 0px;
+  margin: 20px;
   position: relative;
   touch-action: none; /* 防止移动端默认触摸行为 */
 }
