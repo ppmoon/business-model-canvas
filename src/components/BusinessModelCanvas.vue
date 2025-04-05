@@ -2,6 +2,13 @@
   <div class="canvas-container">
     <div class="business-model-canvas" ref="canvas"></div>
     
+    <!-- 缩放控制按钮 -->
+    <div class="zoom-controls">
+      <button @click="zoomIn" class="zoom-button">+</button>
+      <button @click="zoomOut" class="zoom-button">-</button>
+      <button @click="resetZoom" class="zoom-button">↺</button>
+    </div>
+    
     <!-- 输入弹窗 -->
     <div v-if="showDialog" class="dialog-overlay">
       <div class="dialog-content">
@@ -43,6 +50,9 @@ export default {
       newNoteContent: '',
       // 存储所有便利贴 {boxId, content, x, y}
       notes: [],
+      // 缩放相关
+      zoom: null,
+      currentZoom: 1,
       /**
        * 定义每个模块（盒子）的布局信息:
        *  - id：模块的唯一标识
@@ -150,8 +160,15 @@ export default {
   },
   mounted() {
     this.drawCanvas();
+    window.addEventListener('resize', this.handleResize);
+  },
+  beforeUnmount() {
+    window.removeEventListener('resize', this.handleResize);
   },
   methods: {
+    handleResize() {
+      this.drawCanvas();
+    },
     calculateDimensions() {
       // 根据模块最大坐标计算画布尺寸（增加100px边距）
       const maxX = Math.max(...this.boxes.map(b => b.x + b.width));
@@ -170,12 +187,32 @@ export default {
         .attr('width', '100%')
         .attr('height', '100%')
         .attr('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`)
-        .attr('preserveAspectRatio', 'xMidYMid meet')
-        .append('g');
+        .attr('preserveAspectRatio', 'xMidYMid meet');
+        
+      // 添加一个包含所有内容的主容器组
+      const mainGroup = svg.append('g')
+        .attr('class', 'main-group');
+        
+      // 设置缩放行为
+      this.zoom = d3.zoom()
+        .scaleExtent([0.3, 3]) // 设置缩放范围从30%到300%
+        .on('zoom', (event) => {
+          mainGroup.attr('transform', event.transform);
+          this.currentZoom = event.transform.k;
+        });
+      
+      // 应用缩放行为到SVG
+      svg.call(this.zoom);
+      
+      // 如果有之前的缩放状态，恢复它
+      if (this.currentZoom !== 1) {
+        const transform = d3.zoomIdentity.scale(this.currentZoom);
+        svg.call(this.zoom.transform, transform);
+      }
 
       // 1. 绘制模块基础部分
       this.boxes.forEach(box => {
-        const g = svg.append('g')
+        const g = mainGroup.append('g')
           .attr('transform', `translate(${box.x}, ${box.y})`);
 
         // 模块矩形
@@ -207,11 +244,14 @@ export default {
         const box = this.boxes.find(b => b.id === note.boxId);
         if (!box) return;
 
-        const g = svg.append('g')
+        const g = mainGroup.append('g')
           .attr('transform', `translate(${box.x + note.x}, ${box.y + note.y})`)
-          .classed('no-zoom', true) // 标记为需要交互的元素
+          .classed('note', true) // 便于识别便利贴元素
           .call(d3.drag()
             .on('start', (event) => {
+              // 在拖动时禁用画布的缩放/平移
+              svg.on('.zoom', null);
+              
               event.sourceEvent.stopPropagation();
               this.dragging = {
                 target: note,
@@ -222,11 +262,12 @@ export default {
             .on('drag', (event) => {
               if (!this.dragging) return;
               
+              // 获取当前的缩放比例
+              const scale = this.currentZoom;
               
-              // 检测当前所在模块
-              // 转换到全局坐标
-              const globalX = event.x;
-              const globalY = event.y;
+              // 计算全局坐标时考虑缩放因子
+              const globalX = event.x / scale;
+              const globalY = event.y / scale;
               
               // 查找当前所在的模块
               const currentBox = this.boxes.find(b => 
@@ -235,10 +276,6 @@ export default {
                 globalY >= b.y && 
                 globalY <= b.y + b.height
               );
-
-              if (currentBox && currentBox.id !== note.boxId) {
-                note.boxId = currentBox.id; // 切换到新模块
-              }
 
               if (currentBox) {
                 // 转换坐标到新模块的局部坐标系
@@ -255,6 +292,9 @@ export default {
               }
             })
             .on('end', () => {
+              // 重新启用画布的缩放功能
+              svg.call(this.zoom);
+              
               this.dragging = null;
               // 触发响应式更新
               this.notes = [...this.notes];
@@ -309,7 +349,7 @@ export default {
 
       // 3. 最后绘制按钮（确保在最顶层）
       this.boxes.forEach(box => {
-        const g = svg.append('g')
+        const g = mainGroup.append('g')
           .attr('transform', `translate(${box.x}, ${box.y})`)
           .style('cursor', 'pointer')
           .on('click', () => {
@@ -317,7 +357,6 @@ export default {
             this.showDialog = true;
           });
 
-        // 加号按钮
         // 加号按钮（右下角固定位置）
         const buttonSize = 30;
         const buttonMargin = 15;
@@ -328,6 +367,7 @@ export default {
           .on('click', function(event) {
             event.stopPropagation();
             this.selectedBox = box;
+            this.dialogType = 'add';
             this.showDialog = true;
             this.$nextTick(() => {
               this.$refs.noteInput?.focus();
@@ -353,6 +393,29 @@ export default {
           .attr('font-weight', 'bold')
           .text('+');
       });
+    },
+    
+    // 缩放控制方法
+    zoomIn() {
+      const svg = d3.select(this.$refs.canvas).select('svg');
+      svg.transition().duration(300).call(
+        this.zoom.scaleBy, 1.2
+      );
+    },
+    
+    zoomOut() {
+      const svg = d3.select(this.$refs.canvas).select('svg');
+      svg.transition().duration(300).call(
+        this.zoom.scaleBy, 0.8
+      );
+    },
+    
+    resetZoom() {
+      const svg = d3.select(this.$refs.canvas).select('svg');
+      svg.transition().duration(300).call(
+        this.zoom.transform, d3.zoomIdentity
+      );
+      this.currentZoom = 1;
     },
 
     handleConfirm() {
@@ -394,6 +457,42 @@ export default {
   margin: 0px;
   position: relative;
   touch-action: none; /* 防止移动端默认触摸行为 */
+}
+
+/* 缩放控制按钮样式 */
+.zoom-controls {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  z-index: 100;
+}
+
+.zoom-button {
+  width: 40px;
+  height: 40px;
+  background: #409EFF;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  transition: all 0.2s;
+}
+
+.zoom-button:hover {
+  background: #2d8cf0;
+  transform: scale(1.05);
+}
+
+.zoom-button:active {
+  transform: scale(0.95);
 }
 
 /* 弹窗样式 */
