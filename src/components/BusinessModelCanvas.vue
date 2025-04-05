@@ -67,48 +67,48 @@ export default {
           subtitle: 'Key Partnerships', 
           x: 0,
           y: 0,
-          width: window.innerWidth / 5, // 浏览器宽度的1/5并留出间距
-          height: window.innerHeight,
+          width: 1280 / 5, // 固定宽度1280的1/5
+          height: 720 / 3 * 2,
           color: '#fff3d4'
         },
         {
           id: 'keyActivities',
           title: '关键业务',
           subtitle: 'Key Activities',
-          x: window.innerWidth / 5, // 前一个模块x + 宽度 + 间距
+          x: 1280 / 5, // 固定宽度1280的1/5
           y: 0,
-          width: window.innerWidth / 5,
-          height: 160,
+          width: 1280 / 5,
+          height: 720 / 3,
           color: '#ebf2ff'
         },
         {
           id: 'valuePropositions',
           title: '价值主张',
           subtitle: 'Value Propositions',
-          x: (window.innerWidth / 5) * 2, // 依次累加
+          x: (1280 / 5) * 2, // 固定宽度累加
           y: 0,
-          width: window.innerWidth / 5,
-          height: 320,
+          width: 1280 / 5,
+          height: 720 / 3 * 2,
           color: '#f6eefe'
         },
         {
           id: 'customerRelationships',
           title: '客户关系',
           subtitle: 'Customer Relationships',
-          x: (window.innerWidth / 5) * 3,
+          x: (1280 / 5) * 3,
           y: 0,
-          width: window.innerWidth / 5,
-          height: 160,
+          width: 1280 / 5,
+          height: 720 / 3,
           color: '#ebf2ff'
         },
         {
           id: 'customerSegments',
           title: '客户细分',
           subtitle: 'Customer Segments',
-          x: (window.innerWidth / 5) * 4,
+          x: (1280 / 5) * 4,
           y: 0,
-          width: window.innerWidth / 5,
-          height: 320,
+          width: 1280 / 5,
+          height: 720 / 3 * 2,
           color: '#f6eefe'
         },
         // ------------------- 第二行（4个模块） -------------------
@@ -116,20 +116,20 @@ export default {
           id: 'keyResources',
           title: '核心资源',
           subtitle: 'Key Resources',
-          x: window.innerWidth / 5,
-          y: 240,
-          width: window.innerWidth / 5,
-          height: 160,
+          x: 1280 / 5,
+          y: 720 / 3,
+          width: 1280 / 5,
+          height: 720 / 3,
           color: '#f0f0ff'
         },
         {
           id: 'channels',
           title: '渠道通路',
           subtitle: 'Channels',
-          x: (window.innerWidth / 5) * 3,
-          y: 240,
-          width: window.innerWidth / 5,
-          height: 160,
+          x: (1280 / 5) * 3,
+          y: 720 / 3,
+          width: 1280 / 5,
+          height: 720 / 3,
           color: '#f0f0ff'
         },
         // ------------------- 第三行（2个模块） -------------------
@@ -138,19 +138,19 @@ export default {
           title: '成本结构',
           subtitle: 'Cost Structure',
           x: 0,
-          y: 400,
-          width: window.innerWidth / 2,
-          height: 160,
+          y: 720 / 3 * 2,
+          width: 1280 / 2,
+          height: 720 / 3,
           color: '#fff0eb'
         },
         {
           id: 'revenueStreams',
           title: '收入来源',
           subtitle: 'Revenue Streams',
-          x: window.innerWidth / 2,
-          y: 400,
-          width: window.innerWidth / 2,
-          height: 160,
+          x: 1280 / 2,
+          y: 720 / 3 * 2,
+          width: 1280 / 2,
+          height: 720 / 3,
           color: '#e6faf0'
         }
       ]
@@ -184,7 +184,7 @@ export default {
         .append('svg')
         .attr('width', '100%')
         .attr('height', '100%')
-        .attr('viewBox', `0 0 ${window.innerWidth} ${window.innerHeight}`)
+        .attr('viewBox', `-${this.initX()} -${this.initY()} ${window.innerWidth} ${window.innerHeight}`)
         .attr('preserveAspectRatio', 'xMidYMid meet');
         
       // 添加一个包含所有内容的主容器组
@@ -330,10 +330,10 @@ export default {
 
         // 加号按钮（右下角固定位置）
         const buttonSize = 30;
-        const buttonMargin = 15;
+        // const buttonMargin = 15;
         
         const buttonGroup = g.append('g')
-          .attr('transform', `translate(${box.width - buttonSize - buttonMargin}, ${box.height - buttonSize - buttonMargin})`)
+          .attr('transform', `translate(${box.width - 40}, ${box.height - 40})`)
           .style('cursor', 'pointer')
           .on('click', function(event) {
             event.stopPropagation();
@@ -365,7 +365,18 @@ export default {
           .text('+');
       });
     },
-    
+    initX() {
+      if (window.innerWidth <= 1650||window.innerHeight <= 880) {
+        return 0
+      }
+      return window.innerWidth / 2 - 720
+    },
+    initY() {
+      if (window.innerWidth <= 1650||window.innerHeight <= 880) {
+        return 0
+      }
+      return window.innerHeight / 2 - 360
+    },
     // 缩放控制方法
     zoomIn() {
       const svg = d3.select(this.$refs.canvas).select('svg');
@@ -500,9 +511,6 @@ export default {
   overflow: hidden;
   width: 100%;
   height: 100%;
-  margin: 20px;
-  position: relative;
-  touch-action: none; /* 防止移动端默认触摸行为 */
 }
 
 /* 缩放控制按钮样式 */
