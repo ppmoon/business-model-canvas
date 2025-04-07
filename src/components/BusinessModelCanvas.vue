@@ -574,12 +574,12 @@ export default {
 }
 
 .dialog-content h3 {
-  margin: 0 0 15px 0;
+  margin: 0 8px 15px;
   color: #333;
 }
 
 .dialog-content textarea {
-  width: calc(100% - 16px); /* 左右各留8px间距 */
+  width: 368px; /* 左右各留8px间距 */
   height: 100px;
   padding: 8px;
   margin: 0 8px 15px; /* 左右对称8px边距 */
