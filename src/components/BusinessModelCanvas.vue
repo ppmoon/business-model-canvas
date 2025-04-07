@@ -31,6 +31,8 @@
 <script>
 import * as d3 from 'd3';
 
+const contentWidth = 1040;
+const contentHeight = 519;
 export default {
   name: 'BusinessModelCanvas',
   data() {
@@ -67,48 +69,48 @@ export default {
           subtitle: 'Key Partnerships', 
           x: 0,
           y: 0,
-          width: 1280 / 5, // 固定宽度1280的1/5
-          height: 720 / 3 * 2,
+          width: contentWidth / 5, // 固定宽度contentWidth的1/5
+          height: contentHeight / 3 * 2,
           color: '#fff3d4'
         },
         {
           id: 'keyActivities',
           title: '关键业务',
           subtitle: 'Key Activities',
-          x: 1280 / 5, // 固定宽度1280的1/5
+          x: contentWidth / 5, // 固定宽度contentWidth的1/5
           y: 0,
-          width: 1280 / 5,
-          height: 720 / 3,
+          width: contentWidth / 5,
+          height: contentHeight / 3,
           color: '#ebf2ff'
         },
         {
           id: 'valuePropositions',
           title: '价值主张',
           subtitle: 'Value Propositions',
-          x: (1280 / 5) * 2, // 固定宽度累加
+          x: (contentWidth / 5) * 2, // 固定宽度累加
           y: 0,
-          width: 1280 / 5,
-          height: 720 / 3 * 2,
+          width: contentWidth / 5,
+          height: contentHeight / 3 * 2,
           color: '#f6eefe'
         },
         {
           id: 'customerRelationships',
           title: '客户关系',
           subtitle: 'Customer Relationships',
-          x: (1280 / 5) * 3,
+          x: (contentWidth / 5) * 3,
           y: 0,
-          width: 1280 / 5,
-          height: 720 / 3,
+          width: contentWidth / 5,
+          height: contentHeight / 3,
           color: '#ebf2ff'
         },
         {
           id: 'customerSegments',
           title: '客户细分',
           subtitle: 'Customer Segments',
-          x: (1280 / 5) * 4,
+          x: (contentWidth / 5) * 4,
           y: 0,
-          width: 1280 / 5,
-          height: 720 / 3 * 2,
+          width: contentWidth / 5,
+          height: contentHeight / 3 * 2,
           color: '#f6eefe'
         },
         // ------------------- 第二行（4个模块） -------------------
@@ -116,20 +118,20 @@ export default {
           id: 'keyResources',
           title: '核心资源',
           subtitle: 'Key Resources',
-          x: 1280 / 5,
-          y: 720 / 3,
-          width: 1280 / 5,
-          height: 720 / 3,
+          x: contentWidth / 5,
+          y: contentHeight / 3,
+          width: contentWidth / 5,
+          height: contentHeight / 3,
           color: '#f0f0ff'
         },
         {
           id: 'channels',
           title: '渠道通路',
           subtitle: 'Channels',
-          x: (1280 / 5) * 3,
-          y: 720 / 3,
-          width: 1280 / 5,
-          height: 720 / 3,
+          x: (contentWidth / 5) * 3,
+          y: contentHeight / 3,
+          width: contentWidth / 5,
+          height: contentHeight / 3,
           color: '#f0f0ff'
         },
         // ------------------- 第三行（2个模块） -------------------
@@ -138,19 +140,19 @@ export default {
           title: '成本结构',
           subtitle: 'Cost Structure',
           x: 0,
-          y: 720 / 3 * 2,
-          width: 1280 / 2,
-          height: 720 / 3,
+          y: contentHeight / 3 * 2,
+          width: contentWidth / 2,
+          height: contentHeight / 3,
           color: '#fff0eb'
         },
         {
           id: 'revenueStreams',
           title: '收入来源',
           subtitle: 'Revenue Streams',
-          x: 1280 / 2,
-          y: 720 / 3 * 2,
-          width: 1280 / 2,
-          height: 720 / 3,
+          x: contentWidth / 2,
+          y: contentHeight / 3 * 2,
+          width: contentWidth / 2,
+          height: contentHeight / 3,
           color: '#e6faf0'
         }
       ]
@@ -257,10 +259,10 @@ export default {
             })
             .on('drag', (event) => {
               if (!this.dragging) return;
-              note.x = event.x
-              note.y = event.y
-              g.attr('transform', `translate(${event.x}, ${event.y})`);
-
+              // 计算基于点击位置的偏移量
+              note.x = event.x - this.dragging.offsetX;
+              note.y = event.y - this.dragging.offsetY;
+              g.attr('transform', `translate(${note.x}, ${note.y})`);
             })
             .on('end', () => {
               // 重新启用画布的缩放功能
@@ -366,16 +368,16 @@ export default {
       });
     },
     initX() {
-      if (window.innerWidth <= 1650||window.innerHeight <= 880) {
+      if (window.innerWidth <= contentWidth||window.innerHeight <= contentHeight) {
         return 0
       }
-      return window.innerWidth / 2 - 720
+      return window.innerWidth / 2 - contentWidth / 2
     },
     initY() {
-      if (window.innerWidth <= 1650||window.innerHeight <= 880) {
+      if (window.innerWidth <= contentWidth||window.innerHeight <= contentHeight) {
         return 0
       }
-      return window.innerHeight / 2 - 360
+      return window.innerHeight / 2 - contentHeight / 2
     },
     // 缩放控制方法
     zoomIn() {
@@ -419,9 +421,9 @@ export default {
           })
           .on('drag', (event) => {
             if (!this.dragging) return;
-            note.x = event.x
-            note.y = event.y
-            g.attr('transform', `translate(${event.x}, ${event.y})`);
+            note.x = event.x - this.dragging.offsetX;
+            note.y = event.y - this.dragging.offsetY;
+            g.attr('transform', `translate(${note.x}, ${note.y})`);
           })
           .on('end', () => {
             svg.call(this.zoom);
@@ -577,13 +579,14 @@ export default {
 }
 
 .dialog-content textarea {
-  width: 100%;
+  width: calc(100% - 16px); /* 左右各留8px间距 */
   height: 100px;
   padding: 8px;
+  margin: 0 8px 15px; /* 左右对称8px边距 */
   border: 1px solid #ddd;
   border-radius: 4px;
-  margin-bottom: 15px;
   resize: vertical;
+  display: block; /* 确保居中显示 */
 }
 
 .dialog-buttons {
