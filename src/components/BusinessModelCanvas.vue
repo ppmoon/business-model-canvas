@@ -172,17 +172,17 @@ export default {
 
     getBoxIcon(boxId) {
       const icons = {
-        keyPartnerships: 'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-4 6h-4v2h4v2h-4v2h4v2H9V7h6v2z',
-        keyActivities: 'M13 9V5h-2v6H9.83L12 13.17 14.17 11H13z', 
-        valuePropositions: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z',
-        customerRelationships: 'M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5s-3 1.34-3 3 1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z',
-        customerSegments: 'M12 5.5c1.38 0 2.5 1.12 2.5 2.5s-1.12 2.5-2.5 2.5-2.5-1.12-2.5-2.5 1.12-2.5 2.5-2.5zM18 17v-2.5c0-1.1-.9-2-2-2s-2 .9-2 2V17h4zM8 15c-1.1 0-2 .9-2 2v2.5h4V17c0-1.1-.9-2-2-2zm-4-2v4h4v-4H4zm14 4h4v-4h-4v4z',
-        keyResources: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z',
-        channels: 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zM8 12V7h2v5H8zm6 6h-4v-2h4v2zm0-4h-4v-2h4v2zm0-4h-4v-2h4v2z',
-        costStructure: 'M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM11 9h2V7h-2v2z',
-        revenueStreams: 'M11 17h2v-6h-2v6zm1-15C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zM11 9h2V7h-2v2z'
+        keyPartnerships: 'mdi-account-group',      // 合作伙伴
+        keyActivities: 'mdi-briefcase-outline',    // 关键业务
+        valuePropositions: 'mdi-lightbulb-on',     // 价值主张
+        customerRelationships: 'mdi-handshake',    // 客户关系
+        customerSegments: 'mdi-account-multiple',  // 客户细分
+        keyResources: 'mdi-factory',               // 核心资源
+        channels: 'mdi-transit-connection',        // 渠道通路
+        costStructure: 'mdi-cash-remove',          // 成本结构
+        revenueStreams: 'mdi-cash-multiple'        // 收入来源
       };
-      return icons[boxId] || 'M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 15h-2v-6h2v6zm0-8h-2V7h2v2z';
+      return icons[boxId] || 'mdi-help-circle'; // 默认图标
     },
     calculateDimensions() {
       // 根据模块最大坐标计算画布尺寸（增加100px边距）
@@ -254,12 +254,16 @@ export default {
           .text(box.subtitle);
 
         // 模块图标（右上角）
-        g.append('path')
-          .attr('d', this.getBoxIcon(box.id))
-          .attr('transform', `translate(${box.width - 40}, 20)`)
-          .attr('fill', '#409EFF')
-          .style('cursor', 'pointer')
-          .attr('class', 'box-icon');
+        g.append('foreignObject')
+          .attr('x', box.width - 40) // 24图标尺寸 + 20边距
+          .attr('y', 8)
+          .attr('width', 24)
+          .attr('height', 24)
+          .append('xhtml:i')
+          .attr('class', () => `mdi ${this.getBoxIcon(box.id)}`)
+          .style('font-size', '24px')
+          .style('color', '#000000')
+          .style('cursor', 'pointer');
       });
 
       // 2. 绘制便利贴
@@ -635,12 +639,15 @@ export default {
   color: #666;
 }
 
-.box-icon {
+/* 添加Material Design图标字体 */
+@import url('https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css');
+
+.mdi {
   transition: all 0.2s ease;
 }
 
-.box-icon:hover {
-  fill: #2d8cf0;
+.mdi:hover {
+  color: #2d8cf0 !important;
   transform: scale(1.1);
 }
 </style>
