@@ -30,6 +30,9 @@
 
 <script>
 import * as d3 from 'd3';
+import { mdiAccountGroup, mdiBriefcaseOutline, mdiLightbulbOn, mdiHandshake,
+         mdiAccountMultiple, mdiFactory, mdiTransitConnection, mdiCashRemove,
+         mdiCashMultiple, mdiHelpCircle } from '@mdi/js';
 
 const contentWidth = 1040;
 const contentHeight = 519;
@@ -172,17 +175,17 @@ export default {
 
     getBoxIcon(boxId) {
       const icons = {
-        keyPartnerships: 'mdi-account-group',      // 合作伙伴
-        keyActivities: 'mdi-briefcase-outline',    // 关键业务
-        valuePropositions: 'mdi-lightbulb-on',     // 价值主张
-        customerRelationships: 'mdi-handshake',    // 客户关系
-        customerSegments: 'mdi-account-multiple',  // 客户细分
-        keyResources: 'mdi-factory',               // 核心资源
-        channels: 'mdi-transit-connection',        // 渠道通路
-        costStructure: 'mdi-cash-remove',          // 成本结构
-        revenueStreams: 'mdi-cash-multiple'        // 收入来源
+        keyPartnerships: mdiAccountGroup,
+        keyActivities: mdiBriefcaseOutline,
+        valuePropositions: mdiLightbulbOn,
+        customerRelationships: mdiHandshake,
+        customerSegments: mdiAccountMultiple,
+        keyResources: mdiFactory,
+        channels: mdiTransitConnection,
+        costStructure: mdiCashRemove,
+        revenueStreams: mdiCashMultiple
       };
-      return icons[boxId] || 'mdi-help-circle'; // 默认图标
+      return icons[boxId] || mdiHelpCircle; // 默认图标
     },
     calculateDimensions() {
       // 根据模块最大坐标计算画布尺寸（增加100px边距）
@@ -254,16 +257,14 @@ export default {
           .text(box.subtitle);
 
         // 模块图标（右上角）
-        g.append('foreignObject')
+        g.append('path')
           .attr('x', box.width - 40) // 24图标尺寸 + 20边距
           .attr('y', 8)
+          .attr('d', this.getBoxIcon(box.id)) // 返回 path 的 d 属性
+          .attr('transform', `translate(${box.width - 32}, 8)`) // 移动图标到合适位置
           .attr('width', 24)
           .attr('height', 24)
-          .append('xhtml:i')
-          .attr('class', () => `mdi ${this.getBoxIcon(box.id)}`)
-          .style('font-size', '24px')
-          .style('color', '#000000')
-          .style('cursor', 'pointer');
+          .attr('fill', '#000');
       });
 
       // 2. 绘制便利贴
@@ -639,15 +640,12 @@ export default {
   color: #666;
 }
 
-/* 添加Material Design图标字体 */
-@import url('https://cdn.jsdelivr.net/npm/@mdi/font@7.2.96/css/materialdesignicons.min.css');
-
 .mdi {
   transition: all 0.2s ease;
 }
 
 .mdi:hover {
   color: #2d8cf0 !important;
-  transform: scale(1.1);
+  transform: scale(1.1) rotate(15deg);
 }
 </style>
