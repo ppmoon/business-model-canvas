@@ -387,6 +387,7 @@ export default {
         const buttonGroup = g.append('g')
           .attr('transform', `translate(${box.width - 40}, ${box.height - 40})`)
           .style('cursor', 'pointer')
+          .attr('class', 'add-button') // 添加class标识
           .on('click', function(event) {
             event.stopPropagation();
             this.selectedBox = box;
@@ -403,6 +404,7 @@ export default {
           .attr('cy', buttonSize/2)
           .attr('r', buttonSize/2)
           .attr('fill', '#409EFF')
+          .attr('class', 'add-button')
           .style('cursor', 'pointer')
           .style('pointer-events', 'all');
 
@@ -414,6 +416,7 @@ export default {
           .attr('fill', 'white')
           .attr('font-size', '24px')
           .attr('font-weight', 'bold')
+          .attr('class', 'add-button')
           .text('+');
       });
     },
@@ -467,7 +470,10 @@ export default {
       // 克隆main-group并重置transform
       const clonedGroup = mainGroup.cloneNode(true);
       clonedGroup.removeAttribute('transform');
-      
+      // 移除所有加号按钮
+      clonedGroup.querySelectorAll('.add-button').forEach(g => {
+          g.remove();
+      });
       // 创建新的SVG容器，固定尺寸为1040x519
       const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       svg.setAttribute('width', contentWidth);
