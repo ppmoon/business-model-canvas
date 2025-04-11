@@ -331,14 +331,15 @@ export default {
           .style('word-break', 'break-all')
           .html(note.content);
 
-        // 删除按钮
-        g.append('circle')
+        // 删除按钮（初始隐藏）
+        const deleteBtn = g.append('circle')
           .attr('cx', 110)
           .attr('cy', 5)
           .attr('r', 8)
           .attr('fill', '#ff4d4f')
           .style('cursor', 'pointer')
           .style('pointer-events', 'all')
+          .style('opacity', 0)
           .on('click', function(event) {
             event.stopPropagation(); // 阻止事件冒泡
             this.selectedNote = note;
@@ -355,7 +356,18 @@ export default {
           .attr('font-size', '12px')
           .style('cursor', 'pointer')
           .style('pointer-events', 'none')
+          .style('opacity', 0)
           .text('×');
+
+        // 添加鼠标悬停事件
+        g.on('mouseover', () => {
+          deleteBtn.style('opacity', 1);
+          g.select('text').style('opacity', 1);
+        })
+        .on('mouseleave', () => {
+          deleteBtn.style('opacity', 0);
+          g.select('text').style('opacity', 0);
+        });
       });
 
       // 3. 最后绘制按钮（确保在最顶层）
@@ -535,14 +547,15 @@ export default {
         .style('word-break', 'break-all')
         .html(note.content);
 
-      // 删除按钮
-      g.append('circle')
+      // 删除按钮（初始隐藏）
+      const deleteBtn = g.append('circle')
         .attr('cx', 110)
         .attr('cy', 5)
         .attr('r', 8)
         .attr('fill', '#ff4d4f')
         .style('cursor', 'pointer')
         .style('pointer-events', 'all')
+        .style('opacity', 0)
         .on('click', function(event) {
           event.stopPropagation();
           this.selectedNote = note;
@@ -559,7 +572,18 @@ export default {
         .attr('font-size', '12px')
         .style('cursor', 'pointer')
         .style('pointer-events', 'none')
+        .style('opacity', 0)
         .text('×');
+
+      // 添加鼠标悬停事件
+      g.on('mouseover', () => {
+        deleteBtn.style('opacity', 1);
+        g.select('text').style('opacity', 1);
+      })
+      .on('mouseleave', () => {
+        deleteBtn.style('opacity', 0);
+        g.select('text').style('opacity', 0);
+      });
     },
 
     handleConfirm() {
@@ -704,6 +728,11 @@ export default {
   color: #2d8cf0 !important;
   transform: scale(1.1) rotate(15deg);
 }
+/* 删除按钮过渡效果 */
+.note circle, .note text {
+  transition: opacity 0.2s ease;
+}
+
 /* 导出控制样式 */
 .export-controls {
   position: fixed;
