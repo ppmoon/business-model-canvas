@@ -8,7 +8,15 @@
       <button @click="zoomOut" class="zoom-button">-</button>
       <button @click="resetZoom" class="zoom-button">↺</button>
     </div>
-    
+     <!-- 导出控制 -->
+    <div class="export-controls">
+      <button class="export-btn" @click="toggleExportMenu">
+        导出 ▼
+      </button>
+      <div v-show="showExportMenu" class="export-menu">
+        <button @click="exportAsPng">导出PNG</button>
+      </div>
+    </div>
     <!-- 输入弹窗 -->
     <div v-if="showDialog" class="dialog-overlay">
       <div class="dialog-content">
@@ -30,6 +38,7 @@
 
 <script>
 import * as d3 from 'd3';
+import html2canvas from 'html2canvas';
 import { mdiAccountGroup, mdiBriefcaseOutline, mdiLightbulbOn, mdiHandshake,
          mdiAccountMultiple, mdiFactory, mdiTransitConnection, mdiCashRemove,
          mdiCashMultiple, mdiHelpCircle } from '@mdi/js';
@@ -40,6 +49,7 @@ export default {
   name: 'BusinessModelCanvas',
   data() {
     return {
+      showExportMenu: false,
       // 拖拽状态存储
       dragging: null,
       // 动态计算画布尺寸（根据模块布局自动调整）
@@ -387,7 +397,7 @@ export default {
         // 加号图标
         buttonGroup.append('text')
           .attr('x', buttonSize/2)
-          .attr('y', buttonSize/2 + 6)
+          .attr('y', buttonSize/2 + 8)
           .attr('text-anchor', 'middle')
           .attr('fill', 'white')
           .attr('font-size', '24px')
@@ -429,7 +439,53 @@ export default {
       );
       this.currentZoom = 1;
     },
+    toggleExportMenu() {
+      this.showExportMenu = !this.showExportMenu;
+    },
 
+    exportAsPng() {
+      this.showExportMenu = false;
+      const mainGroup = this.$refs.canvas.querySelector('.main-group');
+      
+      // 创建一个临时容器只包含画布内容
+      const tempContainer = document.createElement('div');
+      tempContainer.style.position = 'absolute';
+      tempContainer.style.left = '-9999px';
+      
+      // 克隆main-group并重置transform
+      const clonedGroup = mainGroup.cloneNode(true);
+      clonedGroup.removeAttribute('transform');
+      
+      // 创建新的SVG容器，固定尺寸为1040x519
+      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      svg.setAttribute('width', contentWidth);
+      svg.setAttribute('height', contentHeight);
+      svg.setAttribute('viewBox', `0 0 ${contentWidth} ${contentHeight}`);
+      svg.appendChild(clonedGroup);
+      
+      tempContainer.appendChild(svg);
+      document.body.appendChild(tempContainer);
+
+      html2canvas(tempContainer, {
+        logging: false,
+        useCORS: true,
+        scale: 2,
+        backgroundColor: null,
+        allowTaint: true,
+        foreignObjectRendering: false,
+        width: contentWidth,
+        height: contentHeight
+      }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = '商业模式画布.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        document.body.removeChild(tempContainer);
+      }).catch(err => {
+        console.error('导出失败:', err);
+        document.body.removeChild(tempContainer);
+      });
+    },
     addNote(note) {
       const svg = d3.select(this.$refs.canvas).select('svg');
       const mainGroup = svg.select('.main-group');
@@ -648,4 +704,50 @@ export default {
   color: #2d8cf0 !important;
   transform: scale(1.1) rotate(15deg);
 }
+/* 导出控制样式 */
+.export-controls {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 100;
+}
+
+.export-btn {
+  padding: 8px 16px;
+  background: #67C23A;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.export-btn:hover {
+  background: #5daf34;
+}
+
+.export-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-top: 5px;
+  min-width: 120px;
+}
+
+.export-menu button {
+  width: 100%;
+  padding: 8px 16px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.export-menu button:hover {
+  background: #f5f5f5;
+}
+
 </style>
